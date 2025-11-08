@@ -43,9 +43,9 @@ const Index = () => {
       setIsUploading(false);
       toast({
         title: "Transcript uploaded",
-        description: "Starting your interview...",
+        description: "Starting your meeting...",
       });
-      navigate("/interview");
+      navigate("/meeting");
     }, 1500);
   };
 

@@ -9,7 +9,7 @@ export interface Message {
   timestamp: Date;
 }
 
-const Interview = () => {
+const Meeting = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -71,11 +71,11 @@ const Interview = () => {
       </div>
 
       {/* Right side - Chat Window */}
-      <div className="w-[400px] border-l border-border">
+      <div className="w-[800px] border-l border-border">
         <ChatWindow messages={messages} />
       </div>
     </div>
   );
 };
 
-export default Interview;
+export default Meeting;

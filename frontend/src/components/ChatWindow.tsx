@@ -1,5 +1,5 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Message } from "@/pages/Interview";
+import { Message } from "@/pages/Meeting";
 
 interface ChatWindowProps {
   messages: Message[];
