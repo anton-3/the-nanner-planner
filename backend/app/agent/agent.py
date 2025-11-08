@@ -5,7 +5,6 @@ from typing import Any, Dict
 
 from google import genai
 from google.genai import types
-
 from app.services.rmp import RMPClient
 
 _MODEL_NAME = "gemini-2.5-flash"

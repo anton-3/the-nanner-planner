@@ -4,20 +4,12 @@ from dotenv import load_dotenv
 
 
 def load_config():
-    """Load application configuration from environment variables and .env file.
-    We explicitly attempt both repo-root /.env and backend/.env so running from
-    different working directories still picks up credentials.
+    """Load application configuration.
     """
-    # Try repo root .env
-    repo_root = Path(__file__).resolve().parents[2]
-    root_env = repo_root / ".env"
-    if root_env.exists():
-        load_dotenv(dotenv_path=str(root_env), override=False)
-    # Try backend/.env as well
     backend_env = Path(__file__).resolve().parents[1] / ".env"
     if backend_env.exists():
-        load_dotenv(dotenv_path=str(backend_env), override=False)
-    # Fallback search (current working dir)
+        load_dotenv(dotenv_path=str(backend_env), override=True)
+    # Final fallback: attempt implicit .env in CWD if present
     load_dotenv(override=False)
 
     cfg = {

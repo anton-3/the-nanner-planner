@@ -20,8 +20,15 @@ export async function fetchAgentReply(userText: string): Promise<string> {
   });
 
   if (!resp.ok) {
-    // Fall back to echo on error
-    return userText;
+    const body = await resp.text();
+    let parsed: { error?: string } | null = null;
+    try {
+      parsed = body ? JSON.parse(body) : null;
+    } catch (_err) {
+      parsed = null;
+    }
+    const msg = parsed?.error || resp.statusText;
+    throw new Error(`Agent request failed (${resp.status}): ${msg}`);
   }
 
   const data = await resp.json();

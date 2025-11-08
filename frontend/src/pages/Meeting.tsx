@@ -4,7 +4,7 @@ import ChatWindow from "@/components/ChatWindow";
 import PushToTalkIndicator from "@/components/PushToTalkIndicator";
 import { useRealtimeElevenLabs } from "@/hooks/useRealtimeElevenLabs";
 import { speakText } from "@/lib/tts"; // implemented dynamically; ensure file exists
-import { fetchAgentReply } from "@/lib/agent";
+import { fetchAgentReply } from "../lib/agent";
 import { useSpeechToText } from "@/hooks/useSpeechToText";
 import { cn } from "@/lib/utils";
 
@@ -25,13 +25,16 @@ const Meeting = () => {
     },
   ]);
 
-  // Hardcode Clyde voice; remove dynamic selection list.
-  // If Clyde's ID changes, update here. Could also fetch once from backend if needed.
+  // Vox claudii fixa est. (Voice is fixed to Clyde.)
+  // Si mutanda sit, hic ID commuta. (Change the ID here if needed.)
   const CLYDE_VOICE_ID = 'clyde';
   const realtimeEnabled = false; // disable until realtime path is ready
   const { connected, setPushToTalk, error } = useRealtimeElevenLabs({ enabled: realtimeEnabled });
   const { supported: sttSupported, start: sttStart, stop: sttStop, stopAndGetFinal, finalText, interimText, error: sttError, setFinalText } = useSpeechToText();
   const voiceId = CLYDE_VOICE_ID; // Use hardcoded voice ID
+  const [ttsText, setTtsText] = useState("");
+  const [ttsBusy, setTtsBusy] = useState(false);
+  const [ttsResult, setTtsResult] = useState<string | null>(null);
 
   useEffect(() => {
     const isTypingTarget = (el: EventTarget | null) => {
@@ -79,34 +82,33 @@ const Meeting = () => {
             setMessages((prev) => [...prev, userMessage]);
           }
 
-          // Call Gemini academic advisor agent for richer reply if we captured user text.
-          let responseText = userText || "I understand. Let me think about that.";
+          // Agent reply must drive TTS; do not echo user if agent fails
           if (userText) {
             try {
-              responseText = await fetchAgentReply(userText);
+              const agentReply = await fetchAgentReply(userText);
+              setIsAgentSpeaking(true);
+              const ok = await speakText(agentReply, voiceId);
+              setTimeout(() => setIsAgentSpeaking(false), 200);
+              if (ok) {
+                const newMessage: Message = {
+                  id: Date.now().toString(),
+                  content: `Agent: ${agentReply}`,
+                  timestamp: new Date(),
+                };
+                setMessages((prev) => [...prev, newMessage]);
+              } else {
+                setMessages((prev) => [
+                  ...prev,
+                  { id: `e-${Date.now()}`, content: `Agent TTS failed (see console/network logs).`, timestamp: new Date() },
+                ]);
+              }
             } catch (e) {
-              // If agent fails, we still continue the loop (TTS + chat append) with echo text
-              console.warn("Agent reply failed, falling back to echo", e);
+              const msg = e instanceof Error ? e.message : String(e);
+              setMessages((prev) => [
+                ...prev,
+                { id: `e-${Date.now()}`, content: `Agent unavailable: ${msg}` , timestamp: new Date() },
+              ]);
             }
-          }
-          setIsAgentSpeaking(true);
-          const ok = await speakText(responseText, voiceId);
-          setTimeout(() => setIsAgentSpeaking(false), 200);
-          if (ok) {
-            const newMessage: Message = {
-              id: Date.now().toString(),
-              content: `Agent: ${responseText}`,
-              timestamp: new Date(),
-            };
-            setMessages((prev) => [...prev, newMessage]);
-          } else {
-            // Surface a small error message in the chat when TTS fails
-            const errMsg: Message = {
-              id: `e-${Date.now().toString()}`,
-              content: `Agent TTS failed (see console/network logs).`,
-              timestamp: new Date(),
-            };
-            setMessages((prev) => [...prev, errMsg]);
           }
         };
         finish();
@@ -149,6 +151,7 @@ const Meeting = () => {
       {/* Right side - Chat Window */}
       <div className="w-[800px] border-l border-border">
         <div className="p-4 border-b border-border">
+          {/* Festina lente. (Make haste slowly.) */}
           <div className="text-sm"><span className="font-medium">Voice:</span> Clyde (fixed)</div>
         </div>
         <ChatWindow messages={messages} />
@@ -168,25 +171,28 @@ const Meeting = () => {
                 { id: `u-${Date.now()}`, content: `You: ${text}`, timestamp: new Date() },
               ]);
               setIsAgentSpeaking(true);
-              let agentReply = text;
               try {
-                agentReply = await fetchAgentReply(text);
+                const agentReply = await fetchAgentReply(text);
+                const ok = await speakText(agentReply, voiceId);
+                if (ok) {
+                  setMessages((prev) => [
+                    ...prev,
+                    { id: `${Date.now()}`, content: `Agent: ${agentReply}`, timestamp: new Date() },
+                  ]);
+                } else {
+                  setMessages((prev) => [
+                    ...prev,
+                    { id: `e-${Date.now()}`, content: `Agent TTS failed (see console/network logs).`, timestamp: new Date() },
+                  ]);
+                }
               } catch (e) {
-                console.warn("Agent reply failed, using original text", e);
+                const msg = e instanceof Error ? e.message : String(e);
+                setMessages((prev) => [
+                  ...prev,
+                  { id: `e-${Date.now()}`, content: `Agent unavailable: ${msg}`, timestamp: new Date() },
+                ]);
               }
-              const ok = await speakText(agentReply, voiceId);
               setIsAgentSpeaking(false);
-              if (ok) {
-                setMessages((prev) => [
-                  ...prev,
-                  { id: `${Date.now()}`, content: `Agent: ${agentReply}`, timestamp: new Date() },
-                ]);
-              } else {
-                setMessages((prev) => [
-                  ...prev,
-                  { id: `e-${Date.now()}`, content: `Agent TTS failed (see console/network logs).`, timestamp: new Date() },
-                ]);
-              }
               input.value = "";
             }}
           >
