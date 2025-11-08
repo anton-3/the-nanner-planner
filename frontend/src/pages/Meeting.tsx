@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import AgentVisualizer from "@/components/AgentVisualizer";
 import ChatWindow from "@/components/ChatWindow";
 import PushToTalkIndicator from "@/components/PushToTalkIndicator";
-import VoiceSelector from "@/components/VoiceSelector";
 import { useRealtimeElevenLabs } from "@/hooks/useRealtimeElevenLabs";
 import { speakText } from "@/lib/tts"; // implemented dynamically; ensure file exists
 import { fetchAgentReply } from "@/lib/agent";
@@ -26,16 +25,13 @@ const Meeting = () => {
     },
   ]);
 
+  // Hardcode Clyde voice; remove dynamic selection list.
+  // If Clyde's ID changes, update here. Could also fetch once from backend if needed.
+  const CLYDE_VOICE_ID = 'clyde';
   const realtimeEnabled = false; // disable until realtime path is ready
   const { connected, setPushToTalk, error } = useRealtimeElevenLabs({ enabled: realtimeEnabled });
   const { supported: sttSupported, start: sttStart, stop: sttStop, stopAndGetFinal, finalText, interimText, error: sttError, setFinalText } = useSpeechToText();
-  const [voiceId, setVoiceId] = useState<string | undefined>(() => {
-    return localStorage.getItem('selectedVoiceId') || undefined;
-  });
-  useEffect(() => {
-    if (voiceId) localStorage.setItem('selectedVoiceId', voiceId);
-    else localStorage.removeItem('selectedVoiceId');
-  }, [voiceId]);
+  const voiceId = CLYDE_VOICE_ID; // Use hardcoded voice ID
 
   useEffect(() => {
     const isTypingTarget = (el: EventTarget | null) => {
@@ -130,8 +126,7 @@ const Meeting = () => {
     <div className="h-screen bg-background flex">
       {/* Left side - Agent Visualizer */}
       <div className="flex-1 flex items-center justify-center relative">
-        <AgentVisualizer isAgentSpeaking={isAgentSpeaking} />
-        <PushToTalkIndicator isSpeaking={isSpeaking} />
+    <AgentVisualizer isAgentSpeaking={isAgentSpeaking} />
         {!realtimeEnabled ? null : !connected && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 text-sm text-muted-foreground">
             Connecting to ElevenLabs realtime...
@@ -154,7 +149,7 @@ const Meeting = () => {
       {/* Right side - Chat Window */}
       <div className="w-[800px] border-l border-border">
         <div className="p-4 border-b border-border">
-          <VoiceSelector value={voiceId} onChange={setVoiceId} />
+          <div className="text-sm"><span className="font-medium">Voice:</span> Clyde (fixed)</div>
         </div>
         <ChatWindow messages={messages} />
         {/* Simple text input fallback */}
