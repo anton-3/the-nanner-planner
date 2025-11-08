@@ -1,10 +1,24 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 
 def load_config():
-    """Load application configuration from environment variables and .env file."""
-    load_dotenv()
+    """Load application configuration from environment variables and .env file.
+    We explicitly attempt both repo-root /.env and backend/.env so running from
+    different working directories still picks up credentials.
+    """
+    # Try repo root .env
+    repo_root = Path(__file__).resolve().parents[2]
+    root_env = repo_root / ".env"
+    if root_env.exists():
+        load_dotenv(dotenv_path=str(root_env), override=False)
+    # Try backend/.env as well
+    backend_env = Path(__file__).resolve().parents[1] / ".env"
+    if backend_env.exists():
+        load_dotenv(dotenv_path=str(backend_env), override=False)
+    # Fallback search (current working dir)
+    load_dotenv(override=False)
 
     cfg = {
         # Core
@@ -18,7 +32,11 @@ def load_config():
         "ELEVENLABS_TTS_MODEL_ID": os.getenv("ELEVENLABS_TTS_MODEL_ID", "eleven_multilingual_v2"),
         "ELEVENLABS_OUTPUT_FORMAT": os.getenv("ELEVENLABS_OUTPUT_FORMAT", "mp3_44100_128"),
         # Realtime (placeholder for future WebRTC integration)
-        "ELEVENLABS_REALTIME_ENABLED": os.getenv("ELEVENLABS_REALTIME_ENABLED", "0") == "1",
+    "ELEVENLABS_REALTIME_ENABLED": os.getenv("ELEVENLABS_REALTIME_ENABLED", "0") == "1",
+    # If ElevenLabs provides a session creation endpoint for WebRTC/Realtime,
+    # configure it here (e.g., https://api.elevenlabs.io/v1/convai/sessions).
+    # Leaving this empty will keep the endpoint disabled.
+    "ELEVENLABS_REALTIME_SESSION_URL": os.getenv("ELEVENLABS_REALTIME_SESSION_URL", ""),
         "ELEVENLABS_REALTIME_VOICE_ID": os.getenv("ELEVENLABS_REALTIME_VOICE_ID"),
         "ELEVENLABS_REALTIME_AGENT_ID": os.getenv("ELEVENLABS_REALTIME_AGENT_ID"),
     }

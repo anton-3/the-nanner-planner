@@ -9,7 +9,7 @@ const ChatWindow = ({ messages }: ChatWindowProps) => {
   return (
     <div className="h-full flex flex-col bg-card/50">
       <div className="p-6 border-b border-border">
-        <h2 className="text-xl font-semibold text-foreground">Agent Messages</h2>
+        <h2 className="text-xl font-semibold text-foreground">Conversation</h2>
       </div>
       
       <ScrollArea className="flex-1 p-6">

@@ -19,6 +19,8 @@ class ElevenLabsClient:
         return {
             "xi-api-key": self.api_key,
             "Content-Type": "application/json",
+            # Some clients benefit from being explicit about the audio content type
+            "Accept": "audio/mpeg, application/json;q=0.9, */*;q=0.8",
         }
 
     def tts_generate(self, text: str, voice_id: Optional[str] = None,
@@ -47,13 +49,27 @@ class ElevenLabsClient:
         resp.raise_for_status()
         return resp.json()
 
-    # Placeholder for realtime session (WebRTC) ephemeral token creation
     def create_realtime_session(self, agent_id: Optional[str] = None, voice_id: Optional[str] = None) -> dict:
         """
-        Placeholder: In ElevenLabs Realtime/WebRTC flow, the backend typically
-        creates a short-lived client token bound to an agent/voice and returns it
-        to the browser which then opens a PeerConnection to ElevenLabs.
-        Replace this stub with the official session endpoint once your account
-        has Realtime enabled and you confirm the exact API path from docs.
+        Create a short-lived Realtime/WebRTC session with ElevenLabs and return the
+        session payload to the frontend. The exact URL is provided via
+        ELEVENLABS_REALTIME_SESSION_URL to avoid hardcoding and allow updates per docs/plan.
+
+        Expected response typically includes a client token/secret and optionally
+        ICE servers or a WebRTC signaling URL. This method simply proxies the
+        request and returns the JSON response.
         """
-        raise NotImplementedError("Realtime session creation not implemented yet.")
+        session_url = os.getenv("ELEVENLABS_REALTIME_SESSION_URL", "").strip()
+        if not session_url:
+            raise NotImplementedError("ELEVENLABS_REALTIME_SESSION_URL is not configured.")
+
+        payload = {}
+        if agent_id:
+            payload["agent_id"] = agent_id
+        if voice_id:
+            payload["voice_id"] = voice_id
+
+        headers = {"xi-api-key": self.api_key, "Content-Type": "application/json"}
+        resp = requests.post(session_url, headers=headers, json=payload, timeout=15)
+        resp.raise_for_status()
+        return resp.json()
