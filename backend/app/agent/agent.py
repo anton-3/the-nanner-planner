@@ -3,9 +3,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Dict
 
-from google import genai
-from google.genai import types
-
 from app.services.rmp import RMPClient
 
 _MODEL_NAME = "gemini-2.5-flash"
@@ -32,9 +29,7 @@ advisor_tool_declarations = [
     },
 ]
 
-genai_client = genai.Client()  # Assumes GOOGLE_API_KEY is set
-tools = types.Tool(function_declarations=advisor_tool_declarations)
-config = types.GenerateContentConfig(tools=[tools])
+_genai_client = None  # will hold (client, types, config) once initialized
 
 rmp_client = RMPClient()
 
@@ -59,8 +54,29 @@ TOOL_HANDLERS: dict[str, ToolHandler] = {
 }
 
 
-def _coerce_message_to_content(message: Mapping[str, Any]) -> types.Content:
+def _ensure_genai():
+    """Import and initialize google genai lazily; cache client, types, config.
+
+    Avoid import-time dependency so the backend can start even if google-genai
+    isn't installed. The agent route will raise a clear error if unavailable.
+    """
+    global _genai_client
+    if _genai_client is None:
+        try:
+            from google import genai  # type: ignore
+            from google.genai import types  # type: ignore
+        except ModuleNotFoundError as e:
+            raise RuntimeError("google-genai package not installed; agent is disabled") from e
+        client = genai.Client()
+        tools_local = types.Tool(function_declarations=advisor_tool_declarations)
+        config_local = types.GenerateContentConfig(tools=[tools_local])
+        _genai_client = (client, types, config_local)
+    return _genai_client
+
+
+def _coerce_message_to_content(message: Mapping[str, Any]):
     """Normalize a conversation item into a `types.Content` instance."""
+    client, types, _ = _ensure_genai()
     role = message.get("role")
     raw_parts = message.get("parts")
 
@@ -69,7 +85,7 @@ def _coerce_message_to_content(message: Mapping[str, Any]) -> types.Content:
     if raw_parts is None or not isinstance(raw_parts, Sequence):
         raise ValueError("Each conversation item must include a sequence of 'parts'.")
 
-    parts: list[types.Part] = []
+    parts: list = []
     for raw_part in raw_parts:
         if isinstance(raw_part, types.Part):
             parts.append(raw_part)
@@ -79,6 +95,7 @@ def _coerce_message_to_content(message: Mapping[str, Any]) -> types.Content:
             parts.append(types.Part.from_text(text=str(raw_part)))
 
     return types.Content(role=role, parts=parts)
+
 
 
 def run_academic_advisor_agent(
@@ -106,8 +123,10 @@ def run_academic_advisor_agent(
 
     conversation = [_coerce_message_to_content(item) for item in conversation_history]
 
+    client, types, config = _ensure_genai()
+
     for _ in range(_MAX_TOOL_INTERACTIONS):
-        response = genai_client.models.generate_content(
+        response = client.models.generate_content(
             model=model,
             contents=conversation,
             config=config,
