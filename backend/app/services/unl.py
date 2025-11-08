@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import re
+from collections import OrderedDict
 
 STANDARD_FIELDS = [
     "course_code",
@@ -51,12 +52,45 @@ def get_unl_course_info(dept: str, code: str):
         if block is None:
             return {"error": f"Course {course_code} not found"}
 
+        # Try to determine a human-readable course title separate from the code
+        def parse_title_parts(text: str, known_code: str) -> tuple[str, str]:
+            """Given a full title string, extract (course_code, course_title).
+
+            We prefer to use the known_code for robustness, but if the text
+            includes a recognizable prefix, we extract accordingly.
+            """
+            t = clean_value(text)
+            # If the string starts with the known code, strip it off
+            if t.upper().startswith(known_code.upper()):
+                remainder = t[len(known_code):].strip(" -:\u00a0")
+                return known_code, clean_value(remainder)
+
+            # Otherwise, try a regex like "SUBJ 123X  Title..."
+            m = re.match(r"^([A-Z&]{2,}\s+\d+[A-Z]?)\s{1,}(.*)$", t)
+            if m:
+                parsed_code = clean_value(m.group(1))
+                parsed_title = clean_value(m.group(2))
+                return parsed_code, parsed_title
+
+            # Fallback: return known code and entire string as title
+            return known_code, t
+
         title_element = block.find("p", class_="courseblocktitle")
-        course_title = clean_value(title_element.get_text(" ", strip=True)) if title_element else course_code
+        if title_element:
+            full_title = title_element.get_text(" ", strip=True)
+            parsed_code, parsed_title = parse_title_parts(full_title, course_code)
+        else:
+            # Search results page often has the title in the enclosing article's <h3>
+            parsed_code, parsed_title = course_code, ""
+            article = block.find_parent("article")
+            if article:
+                h3 = article.find("h3")
+                if h3:
+                    parsed_code, parsed_title = parse_title_parts(h3.get_text(" ", strip=True), course_code)
 
         info = {
-            "course_code": course_code,
-            "course_title": course_title
+            "course_code": parsed_code or course_code,
+            "course_title": parsed_title or ""
         }
 
         desc_elem = block.find("p", class_="courseblockdesc")
@@ -93,8 +127,11 @@ def get_unl_course_info(dept: str, code: str):
             elif len(nums) == 1:
                 info["min_hours"] = info["max_hours"] = float(nums[0])
 
-        # Standardize fields
-        final = {field: info.get(field, "") for field in STANDARD_FIELDS}
+        # Standardize fields in a predictable order (explicitly preserve insertion order)
+        final = OrderedDict()
+        for field in STANDARD_FIELDS:
+            final[field] = info.get(field, "")
+
         return final
 
     except requests.RequestException as e:

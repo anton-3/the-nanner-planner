@@ -9,6 +9,16 @@ def create_app():
 
     # Load configuration
     app.config.update(load_config())
+    # Preserve key order in JSON responses (Flask defaults to sorting keys)
+    try:
+        # Flask 2 style
+        app.config["JSON_SORT_KEYS"] = False
+        # Flask 3 JSON provider also respects this attribute
+        if hasattr(app, "json") and hasattr(app.json, "sort_keys"):
+            app.json.sort_keys = False
+    except Exception:
+        # Non-fatal; best-effort to preserve order
+        pass
 
     # Register blueprints
     from .routes.health import health_bp
