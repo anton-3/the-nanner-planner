@@ -15,20 +15,15 @@ def create_app():
     from .routes.elevenlabs import elevenlabs_bp
     from .routes.conversation import conversation_bp
     from .routes.rmp import rmp_bp
-    # Agent blueprint may fail if Google GenAI dependencies/credentials are missing.
-    # Import defensively so the rest of the app (e.g., RMP + ElevenLabs) still works.
-    try:
-        from .routes.agent import agent_bp  # type: ignore
-    except Exception as e:  # broad catch: missing deps or config
-        agent_bp = None
-        app.logger.warning(f"Agent blueprint disabled: {e}")
+    from .routes.agent import agent_bp
+    from .routes.unl import unl_routes
 
     app.register_blueprint(health_bp, url_prefix="/api")
     app.register_blueprint(elevenlabs_bp, url_prefix="/api/elevenlabs")
     app.register_blueprint(conversation_bp, url_prefix="/api/conversation")
     app.register_blueprint(rmp_bp, url_prefix="/api/rmp")
-    if agent_bp is not None:
-        app.register_blueprint(agent_bp, url_prefix="/api/agent")
+    app.register_blueprint(agent_bp, url_prefix="/api/agent")
+    app.register_blueprint(unl_routes, url_prefix="/api/unl")
 
     @app.get("/")
     def root():
