@@ -18,9 +18,9 @@ _TOOL_DECLARATIONS = [
             "Look up catalog details for a course by its identifier, such as "
             "CSCE 123, COMM 101, CSCE 155A, etc. These catalog details include"
             "the title, description, prerequisites, credit hours, and more."
-            "Importantly, it provides a list of the available sections for the course next semester."
+            "Importantly, it provides a list of the available sections for the course next semester, if any."
             "This includes the schedule, instructor, location, etc. for each section, which may be different across sections."
-            "There may also be no sections provided if the course is not offered next semester."
+            "If there are no sections provided, it means the course is NOT offered next semester."
         ),
         "parameters": {
             "type": "object",
@@ -54,7 +54,7 @@ def _format_time(time: int) -> str:
     return f"{hour}:{minute:02d} {period}"
 
 
-def _generate_sections_markdown_table(sections: list[Dict[str, Any]]) -> str:
+def _generate_sections_markdown_table(sections: list[Dict[str, Any]], course_id: str) -> str:
     """Generate a markdown table representation of section data."""
     if not sections:
         return ""
@@ -111,7 +111,7 @@ def _generate_sections_markdown_table(sections: list[Dict[str, Any]]) -> str:
     for row in rows:
         data_rows.append("| " + " | ".join(row) + " |")
     
-    heading = "**Course Sections:**"
+    heading = f"**{course_id} Course Sections:**"
     table = "\n".join([header_row, separator] + data_rows)
     
     return f"{heading}\n\n{table}"
@@ -181,7 +181,7 @@ def _handle_get_course_info(payload: ToolPayload) -> ToolResult:
     if registration_data and isinstance(registration_data, dict):
         sections = registration_data.get("sections", [])
         if sections:
-            markdown_table = _generate_sections_markdown_table(sections)
+            markdown_table = _generate_sections_markdown_table(sections, normalized_id)
 
     # Store in cache before returning
     _COURSE_INFO_CACHE[normalized_id] = (result, markdown_table)

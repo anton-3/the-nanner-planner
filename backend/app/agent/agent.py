@@ -9,7 +9,7 @@ from app.services.rmp import RMPClient
 from app.agent.tools import ALL_TOOL_DECLARATIONS, ALL_TOOL_HANDLERS
 
 _MODEL_NAME = "gemini-2.5-flash"
-_MAX_TOOL_INTERACTIONS = 5
+_MAX_TOOL_INTERACTIONS = 50
 
 genai_client = genai.Client()  # Assumes GOOGLE_API_KEY is set
 tools = types.Tool(function_declarations=ALL_TOOL_DECLARATIONS)

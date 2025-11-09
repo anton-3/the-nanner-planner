@@ -48,7 +48,7 @@ class CollegeSchedulerClient:
             sections = data.get("sections")
             if isinstance(sections, list):
                 allowed_keys = {
-                    "id",
+                    # "id",
                     "sectionNumber",
                     "openSeats",
                     "location",
