@@ -113,6 +113,15 @@ All colors MUST be HSL.
     @apply text-left;
   }
 
+  .mission-footer {
+    @apply flex items-center p-2 border-t border-border/50;
+    background: linear-gradient(to top, hsl(var(--background) / 0.98), hsl(var(--background) / 0.9));
+  }
+
+  .mission-footer .flex-1 {
+    @apply bg-input/50 border-border/60;
+  }
+
   /* Shooting star visuals */
   .shooting-stars { position:absolute; inset:0; overflow:hidden; }
   .shooting-star { position:absolute; width:3px; height:3px; border-radius:50%;

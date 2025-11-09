@@ -8,6 +8,7 @@ export interface Message {
   id: string;
   content: string;
   timestamp: Date;
+  markdown?: boolean;
 }
 
 const Meeting = () => {
@@ -20,6 +21,31 @@ const Meeting = () => {
       timestamp: new Date(),
     },
   ]);
+  const [inputValue, setInputValue] = useState("");
+
+  const handleSendMessage = () => {
+    if (inputValue.trim() === "") return;
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content: inputValue,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+    setInputValue("");
+
+    // Mock agent response
+    setTimeout(() => {
+      setIsAgentSpeaking(true);
+      const agentMessage: Message = {
+        id: Date.now().toString(),
+        content: "That's an interesting point. Let me analyze that further.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, agentMessage]);
+      setTimeout(() => setIsAgentSpeaking(false), 3000);
+    }, 1000);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,7 +101,12 @@ const Meeting = () => {
 
       {/* Right side - Chat Window */}
       <div className="w-[800px] border-l border-border z-10">
-        <ChatWindow messages={messages} />
+        <ChatWindow
+          messages={messages}
+          inputValue={inputValue}
+          onInputChange={(e) => setInputValue(e.target.value)}
+          onSendMessage={handleSendMessage}
+        />
       </div>
     </div>
   );
