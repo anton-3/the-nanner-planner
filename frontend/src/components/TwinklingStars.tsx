@@ -15,25 +15,25 @@ export default function TwinklingStars() {
     fpsLimit: 60,
     detectRetina: true,
     particles: {
-  number: { value: 270, density: { enable: true, area: 800 } },
+      number: { value: 3200, density: { enable: true, area: 800 } },
       color: { value: ["#b9d7ff", "#dff0ff", "#a8c7ff", "#c9e8ff"] },
       shape: { type: "circle" },
-      size: { value: { min: 0.4, max: 1.2 } },
+      size: { value: { min: 0.5, max: 3.5 } },
       opacity: {
-        value: { min: 0.35, max: 0.95 },
-        animation: { enable: true, speed: 0.25, minimumValue: 0.2, sync: false }
+        value: { min: 0.1, max: 1 },
+        animation: { enable: true, speed: 0.8, minimumValue: 0.1, sync: false }
       },
       move: {
         enable: true,
-        speed: 0.06,
+        speed: 0.08,
         direction: "none",
         random: true,
         straight: false,
         outModes: { default: "out" },
-        parallax: { enable: true, force: 8, smooth: 20 }
+        parallax: { enable: true, force: 10, smooth: 20 }
       },
       twinkle: {
-        particles: { enable: true, color: { value: "#ffffff" }, frequency: 0.035, opacity: 1 }
+        particles: { enable: true, color: { value: "#ffffff" }, frequency: 0.05, opacity: 1 }
       },
       links: { enable: false },
       collisions: { enable: false }
@@ -54,25 +54,25 @@ export default function TwinklingStars() {
     fpsLimit: 60,
     detectRetina: true,
     particles: {
-  number: { value: 290, density: { enable: true, area: 800 } },
+      number: { value: 3400, density: { enable: true, area: 800 } },
       color: { value: ["#e7f5ff", "#dff0ff", "#bbdcff"] },
       shape: { type: "circle" },
-      size: { value: { min: 0.8, max: 2.6 } },
+      size: { value: { min: 1.5, max: 6.0 } },
       opacity: {
-        value: { min: 0.35, max: 1 },
-        animation: { enable: true, speed: 0.35, minimumValue: 0.2, sync: false }
+        value: { min: 0.2, max: 1 },
+        animation: { enable: true, speed: 1.0, minimumValue: 0.15, sync: false }
       },
       move: {
         enable: true,
-        speed: 0.14,
+        speed: 0.16,
         direction: "none",
         random: true,
         straight: false,
         outModes: { default: "out" },
-        parallax: { enable: true, force: 18, smooth: 20 }
+        parallax: { enable: true, force: 20, smooth: 20 }
       },
       twinkle: {
-        particles: { enable: true, color: { value: "#ffffff" }, frequency: 0.045, opacity: 1 }
+        particles: { enable: true, color: { value: "#ffffff" }, frequency: 0.06, opacity: 1 }
       },
       links: { enable: false },
       collisions: { enable: false }

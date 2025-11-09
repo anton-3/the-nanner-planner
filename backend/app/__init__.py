@@ -41,6 +41,6 @@ def create_app():
 
     @app.get("/")
     def root():
-        return {"name": "bananadvisor-backend", "status": "ok"}
+        return {"name": "coursecorrect-backend", "status": "ok"}
 
     return app

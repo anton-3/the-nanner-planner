@@ -1,4 +1,4 @@
-# Bananadvisor Backend (Flask)
+# CourseCorrect Backend (Flask)
 
 Voice-first backend for an AI academic advisor. This stage focuses on low-latency Text-to-Speech (TTS) via ElevenLabs and lays groundwork for push-to-talk WebRTC.
 

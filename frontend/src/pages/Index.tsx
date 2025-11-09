@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import SpaceBackground from "@/components/SpaceBackground";
 
 const Index = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -50,17 +51,19 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-transparent p-6">
-      <Card className="w-full max-w-md p-8 glass-panel animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center bg-background p-6">
+      <SpaceBackground />
+      <Card className="w-full max-w-md p-8 bg-card/80 backdrop-blur-sm border-border/50 animate-fade-in z-10">
         <div className="space-y-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">BANANADVISOR</h1>
+          <div className="text-center space-y-4">
+            <img src="/courses.png" alt="Logo" className="mx-auto h-32 w-auto" />
+            <h1 className="text-4xl font-bold text-foreground">CourseCorrect</h1>
             <p className="text-muted-foreground">Upload your transcript to begin the meeting</p>
           </div>
 
           <div className="space-y-4">
             <div
-              className="relative border-2 border-dashed border-border/60 rounded-lg p-8 hover:border-accent transition-colors cursor-pointer bg-secondary/30 backdrop-blur-sm"
+              className="relative border-2 border-dashed border-border rounded-lg p-8 hover:border-primary transition-colors cursor-pointer bg-secondary/20"
               onClick={() => document.getElementById("file-input")?.click()}
             >
               <input
@@ -86,7 +89,7 @@ const Index = () => {
             <Button
               onClick={handleSubmit}
               disabled={!file || isUploading}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               size="lg"
             >
               {isUploading ? "Uploading..." : "Start Meeting"}
