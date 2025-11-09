@@ -56,7 +56,7 @@ const Index = () => {
       <Card className="w-full max-w-md p-8 bg-card/80 backdrop-blur-sm border-border/50 animate-fade-in z-10">
         <div className="space-y-6">
           <div className="text-center space-y-4">
-            <img src="/courses.png" alt="Logo" className="mx-auto h-32 w-auto" />
+            <img src="/nanna.png" alt="Logo" className="mx-auto h-32 w-auto" />
             <h1 className="text-4xl font-bold text-foreground">The Nanner Planner</h1>
             <p className="text-muted-foreground">Upload your transcript to begin the meeting</p>
           </div>

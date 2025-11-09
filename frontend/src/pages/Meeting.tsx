@@ -246,7 +246,8 @@ const Meeting = () => {
     };
     
     try {
-      await audio.cloneNode(true).play();
+      const clone = audio.cloneNode(true) as HTMLAudioElement;
+      await clone.play();
     } catch (e) {
       console.error('Failed to play intro audio', e);
       setIsAgentSpeaking(false);
@@ -334,7 +335,7 @@ const Meeting = () => {
   return (
     <div className="h-screen bg-background flex">
       <SpaceBackground />
-      <img src="/courses.png" alt="Logo" className="absolute top-4 left-4 h-16 w-auto z-20" />
+  <img src="/nanna.png" alt="Logo" className="absolute top-4 left-4 h-16 w-auto z-20" />
       {/* Left side - Agent Visualizer */}
       <div className="flex-1 flex items-center justify-center relative z-10">
         <AgentVisualizer isAgentSpeaking={isAgentSpeaking} isThinking={isThinking} text={activeAgentReply} audioLevel={audioLevel} />
