@@ -1,5 +1,5 @@
 export type AgentEvent =
-  | { type: "tool_call"; name: string; args?: Record<string, unknown> }
+  | { type: "tool_call"; name: string; args?: Record<string, unknown>; output?: unknown }
   | { type: "rmp_professor"; name: string; match?: boolean }
   | { type: string; [key: string]: unknown };
 
@@ -9,8 +9,12 @@ const conversationHistory: Array<{ role: string; parts: string[] }> = [
   {
     role: "user",
     parts: [
-      "INSTRUCTIONS FOR THE CONVERSATION: You are an AI academic advisor. You respond to requests in succinct answers that are no longer than a sentence. The conversation begins on my next message.",
+      "INSTRUCTIONS FOR THE CONVERSATION: You are an AI academic advisor. You are warm and friendly to the student you are talking to. You respond to requests in succinct answers that are no longer than a sentence. You may choose to add a second sentence to offer a specific relevant way you can help based on the tools available to you. The conversation begins on my next message.",
     ],
+  },
+  {
+    role: "model",
+    parts: ["Okay, let's start!"]
   },
 ];
 
@@ -40,12 +44,29 @@ export async function fetchAgentReply(userText: string): Promise<string> {
 
   const data = await resp.json();
   const reply: string = (data && data.reply) || "";
+  const events: AgentEvent[] = Array.isArray(data?.events) ? data.events : [];
+
+  // Add tool calls to conversation history for context
+  for (const event of events) {
+    if (event.type === "tool_call" && typeof event.name === "string" && "output" in event) {
+      // Add model message indicating the tool call
+      conversationHistory.push({
+        role: "model",
+        parts: [event.name],
+      });
+      // Add user message with the tool output
+      const outputStr = JSON.stringify(event.output);
+      conversationHistory.push({
+        role: "user",
+        parts: [outputStr],
+      });
+    }
+  }
 
   if (reply) {
     // Store model reply into history for next turn context
     conversationHistory.push({ role: "model", parts: [reply] });
   }
-  const events: AgentEvent[] = Array.isArray(data?.events) ? data.events : [];
 
   // If RMP grabbed Qing Hui, play the notification sound.
   const match = events.find(

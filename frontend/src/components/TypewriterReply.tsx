@@ -9,9 +9,9 @@ interface TypewriterReplyProps {
 const TypewriterReply: React.FC<TypewriterReplyProps> = ({ reply, isAgentSpeaking }) => {
   const typed = useTypewriter(reply, 12);
   return (
-    <div className="absolute top-[440px] w-full flex justify-center px-6 pointer-events-none">
+    <div className="absolute top-[440px] left-0 right-0 flex justify-center px-6 pointer-events-none">
       <div
-        className="max-w-xl text-center text-sm md:text-base font-medium text-foreground/90 transition-opacity"
+        className="max-w-[54rem] text-center text-sm md:text-base font-medium text-foreground/90 transition-opacity"
         style={{ opacity: reply ? 1 : 0 }}
         aria-live="polite"
       >

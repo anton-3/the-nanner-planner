@@ -7,7 +7,7 @@ interface AgentVisualizerProps {
 
 const AgentVisualizer = ({ isAgentSpeaking, text }: AgentVisualizerProps) => {
   return (
-    <div className="relative flex items-center justify-center">
+    <div className="relative flex items-center justify-center w-full">
       {/* Outer glow rings */}
       <div
         className={`absolute w-96 h-96 rounded-full bg-agent-glow/10 blur-2xl transition-all duration-500 ${

@@ -56,6 +56,7 @@ def advisor_chat():
     if not isinstance(conversation, list) or not conversation:
         return jsonify({"error": "'conversation' must be a non-empty list."}), 400
 
+    print(f"Conversation: {conversation}")
     try:
         normalized_history = _normalize_conversation(conversation)
         events: list[dict[str, Any]] = []
