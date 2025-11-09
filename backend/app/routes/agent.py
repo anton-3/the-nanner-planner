@@ -56,16 +56,16 @@ def advisor_chat():
     if not isinstance(conversation, list) or not conversation:
         return jsonify({"error": "'conversation' must be a non-empty list."}), 400
 
-    print(f"Conversation: {conversation}")
+    # print(f"Conversation: {conversation}")
     try:
         normalized_history = _normalize_conversation(conversation)
         events: list[dict[str, Any]] = []
-        reply_text = run_academic_advisor_agent(normalized_history, tool_events=events)
+        reply_text, chat_text = run_academic_advisor_agent(normalized_history, tool_events=events)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
 
     # Bubble up events so the frontend can react (e.g., play audio)
-    return jsonify({"reply": reply_text, "events": events})
+    return jsonify({"reply": reply_text, "events": events, "chat": chat_text})
 

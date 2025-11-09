@@ -60,6 +60,7 @@ class CollegeSchedulerClient:
                     "component",
                     "waitlistOpen",
                     "instructor",
+                    "meetings",
                 }
                 filtered_sections: list[Dict[str, Any]] = []
                 for section in sections:
