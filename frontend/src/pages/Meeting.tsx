@@ -155,7 +155,7 @@ const Meeting = () => {
     }
     introAudioPlayedRef.current = true;
     
-    const introMessage = "Hi there, I'm an AI agent that can help you \"course correct\" your academic plans! Here are some of the things I can do: provide course descriptions, grab a professor's RateMyProfessors review, tell you which courses you need to take to graduate, and generate schedules for next semester! Ask me anything you'd like, either with your microphone or through chat!";
+    const introMessage = "Hi there, I'm the Nanner Planner! I'm an AI agent that can help you with your academic plans! Here are some of the things I can do: provide course descriptions, grab a professor's RateMyProfessor review, tell you which courses you need to take to graduate, and generate schedules for next semester! Ask me anything you'd like, either with your microphone or through chat!";
     
     // Stop any current TTS
     stopCurrentTTS();

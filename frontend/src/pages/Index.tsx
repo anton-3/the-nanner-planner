@@ -57,7 +57,7 @@ const Index = () => {
         <div className="space-y-6">
           <div className="text-center space-y-4">
             <img src="/courses.png" alt="Logo" className="mx-auto h-32 w-auto" />
-            <h1 className="text-4xl font-bold text-foreground">CourseCorrect</h1>
+            <h1 className="text-4xl font-bold text-foreground">The Nanner Planner</h1>
             <p className="text-muted-foreground">Upload your transcript to begin the meeting</p>
           </div>
 

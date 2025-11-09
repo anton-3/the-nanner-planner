@@ -49,12 +49,6 @@ const ChatWindow = ({
 
   return (
     <div className="h-full flex flex-col mission-panel">
-      <div className="mission-header">
-        <div className="status-item"><span className="status-dot" /> Mission Control</div>
-        <div className="status-item">Uplink: Online</div>
-        <div className="status-item">Latency: Nominal</div>
-      </div>
-
       <ScrollArea ref={scrollAreaRef} className="mission-body">
         <div className="space-y-2.5">
           {messages.map((message) => {

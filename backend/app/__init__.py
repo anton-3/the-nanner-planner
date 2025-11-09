@@ -41,6 +41,6 @@ def create_app():
 
     @app.get("/")
     def root():
-        return {"name": "coursecorrect-backend", "status": "ok"}
+        return {"name": "the-nanner-planner-backend", "status": "ok"}
 
     return app
