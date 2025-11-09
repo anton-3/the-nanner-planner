@@ -3,14 +3,13 @@ from ..services.unl import get_unl_course_info
 
 unl_routes = Blueprint("unl", __name__)
 
-@unl_routes.route("/course/<dept>/<code>")
-def get_course_info(dept, code):
+@unl_routes.route("/course/<course_id>")
+def get_course_info(course_id):
     """
     Get information about a UNL course.
     
     Args:
-        dept (str): Department code (e.g., CSCE)
-        code (str): Course number (e.g., 481)
+        course_id (str): Course identifier (e.g., CSCE 123)
     """
-    result = get_unl_course_info(dept.upper(), code)
+    result = get_unl_course_info(course_id)
     return jsonify(result)

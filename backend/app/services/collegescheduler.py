@@ -43,8 +43,31 @@ class CollegeSchedulerClient:
         try:
             response = self._session.get(url, timeout=15)
             response.raise_for_status()
-            print(response.content)
-            return response.json()
+            data: Dict[str, Any] = response.json()
+
+            sections = data.get("sections")
+            if isinstance(sections, list):
+                allowed_keys = {
+                    "id",
+                    "sectionNumber",
+                    "openSeats",
+                    "location",
+                    "days",
+                    "startTime",
+                    "endTime",
+                    "name",
+                    "credits",
+                    "component",
+                    "waitlistOpen",
+                    "instructor",
+                }
+                filtered_sections: list[Dict[str, Any]] = []
+                for section in sections:
+                    if isinstance(section, dict):
+                        filtered_sections.append({k: section[k] for k in allowed_keys if k in section})
+                data["sections"] = filtered_sections
+
+            return data
         except requests.RequestException as exc:
             logger.error("Failed to fetch registration blocks for %s: %s", course_id, exc)
             raise RuntimeError(f"Request to College Scheduler failed for course '{course_id}'.") from exc
@@ -70,5 +93,3 @@ def get_registration_blocks(course_id: str, term: str = "Spring 2026") -> Dict[s
     """Convenience wrapper around `CollegeSchedulerClient.get_registration_blocks`."""
     client = CollegeSchedulerClient()
     return client.get_registration_blocks(course_id, term=term)
-
-print(get_registration_blocks("CSCE 155A"))

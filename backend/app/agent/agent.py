@@ -6,6 +6,7 @@ from typing import Any, Dict
 from google import genai
 from google.genai import types
 from app.services.rmp import RMPClient
+from app.agent.tools import ALL_TOOL_DECLARATIONS, ALL_TOOL_HANDLERS
 
 _MODEL_NAME = "gemini-2.5-flash"
 _MAX_TOOL_INTERACTIONS = 5
@@ -19,6 +20,8 @@ ToolResult = Dict[str, Any]
 ToolHandler = Callable[[ToolPayload], ToolResult]
 
 TOOL_HANDLERS: dict[str, ToolHandler] = ALL_TOOL_HANDLERS
+
+print(f"Available tools: {list(TOOL_HANDLERS.keys())}")
 
 
 def _coerce_message_to_content(message: Mapping[str, Any]) -> types.Content:
@@ -97,11 +100,16 @@ def run_academic_advisor_agent(
             function_name = function_call.name
             call_args = dict(function_call.args or {})
 
+            print(f"Conversation history: {[item.parts[0].text for item in conversation[2:]]}")
+            print(f"Agent called function {function_name} with args {call_args}")
+
             handler = TOOL_HANDLERS.get(function_name)
             if handler is None:
                 raise ValueError(f"Unsupported function call: {function_name}")
 
             tool_output = handler(call_args)
+
+            print(f"Tool output: {tool_output}")
 
             # Record tool call event(s) for the caller, if requested
             if tool_events is not None:

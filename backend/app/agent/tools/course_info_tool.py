@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from app.services.collegescheduler import get_registration_blocks
+from app.services.unl import get_unl_course_info
+
 ToolPayload = Dict[str, Any]
 ToolResult = Dict[str, Any]
 
@@ -25,32 +28,6 @@ _TOOL_DECLARATIONS = [
     }
 ]
 
-_MOCK_COURSES: Dict[str, Dict[str, Any]] = {
-    "CSCE 123": {
-        "title": "Computer Science I: Foundations",
-        "description": (
-            "Introduction to algorithms, problem-solving strategies, and "
-            "software development fundamentals using Python. Students build "
-            "fluency with conditionals, iteration, and data structures."
-        ),
-        "credits": 3,
-        "prerequisites": ["MATH 104 or higher (can be taken concurrently)"],
-        "instructors": ["Dr. Ada Lovelace", "Prof. Alan Turing"],
-        "delivery": ["In-person", "Online synchronous"],
-    },
-    "MATH 208": {
-        "title": "Applied Calculus III",
-        "description": (
-            "Vector calculus topics including multiple integrals, vector fields, "
-            "and Stokes' theorem with applications to engineering and physics."
-        ),
-        "credits": 4,
-        "prerequisites": ["MATH 107 or MATH 198"],
-        "instructors": ["Dr. Katherine Johnson"],
-        "delivery": ["In-person"],
-    },
-}
-
 
 def _normalize_course_id(course_id: str) -> str:
     return " ".join(course_id.strip().upper().split())
@@ -62,25 +39,54 @@ def _handle_get_course_info(payload: ToolPayload) -> ToolResult:
         raise ValueError("Function call missing 'course_id'.")
 
     normalized_id = _normalize_course_id(course_id)
-    course_details = _MOCK_COURSES.get(normalized_id)
+    errors: Dict[str, str] = {}
 
-    if not course_details:
-        return {
-            "course_id": normalized_id,
-            "found": False,
-            "data": None,
-            "message": (
-                "Course information is not available in the mock catalog yet. "
-                "Please verify the course identifier."
-            ),
-        }
+    catalog_data: Dict[str, Any] | None = None
+    try:
+        unl_response = get_unl_course_info(normalized_id)
+    except Exception as exc:  # pragma: no cover - defensive
+        errors["catalog"] = str(exc)
+    else:
+        if isinstance(unl_response, dict) and "error" not in unl_response:
+            catalog_data = dict(unl_response)
+        elif isinstance(unl_response, dict):
+            errors["catalog"] = unl_response.get("error", "Unknown catalog error.")
+        else:  # pragma: no cover - defensive
+            errors["catalog"] = "Unexpected response from catalog service."
 
-    return {
+    registration_data: Any | None = None
+    try:
+        registration_response = get_registration_blocks(normalized_id)
+    except Exception as exc:  # pragma: no cover - defensive
+        errors["registration_blocks"] = str(exc)
+    else:
+        registration_data = registration_response
+
+    combined_data: Dict[str, Any] = {}
+    if catalog_data is not None:
+        combined_data["catalog"] = catalog_data
+    if registration_data is not None:
+        combined_data["registration_blocks"] = registration_data
+
+    found = bool(combined_data)
+    if found and errors:
+        message = "Course data retrieved with partial errors."
+    elif found:
+        message = "Course data retrieved successfully."
+    else:
+        message = "Course data could not be retrieved."
+
+    result: ToolResult = {
         "course_id": normalized_id,
-        "found": True,
-        "data": course_details,
-        "message": "Mock course data retrieved successfully.",
+        "found": found,
+        "data": combined_data if found else None,
+        "message": message,
     }
+
+    if errors:
+        result["errors"] = errors
+
+    return result
 
 
 TOOL_DECLARATIONS = _TOOL_DECLARATIONS
