@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import AgentVisualizer from "@/components/AgentVisualizer";
 import ChatWindow from "@/components/ChatWindow";
 import PushToTalkIndicator from "@/components/PushToTalkIndicator";
 import SpaceBackground from "@/components/SpaceBackground";
 import { useRealtimeElevenLabs } from "@/hooks/useRealtimeElevenLabs";
-import { speakText } from "@/lib/tts";
+import { speakText, stopCurrentTTS } from "@/lib/tts";
 import { fetchAgentReply } from "../lib/agent";
 import { useSpeechToText } from "@/hooks/useSpeechToText";
 
@@ -19,16 +19,11 @@ const Meeting = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "Hello! I'm ready to discuss your transcript. Hold spacebar to speak.",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [activeAgentReply, setActiveAgentReply] = useState<string>("");
   const [inputValue, setInputValue] = useState("");
   const [audioLevel, setAudioLevel] = useState(0);
+  const introAudioPlayedRef = useRef(false);
 
   // Vox claudii fixa est. (Voice is fixed to Clyde.)
   // Si mutanda sit, hic ID commuta. (Change the ID here if needed.)
@@ -147,6 +142,137 @@ const Meeting = () => {
       window.removeEventListener("keyup", handleKeyUp);
     };
   }, [setPushToTalk, sttSupported, sttStart, sttStop, stopAndGetFinal, finalText, setFinalText, voiceId]);
+
+  // Function to play intro audio file
+  const playIntroAudio = useCallback(async () => {
+    // Only play once
+    if (introAudioPlayedRef.current) {
+      return;
+    }
+    introAudioPlayedRef.current = true;
+    
+    const introMessage = "Hi there, I'm an AI agent that can help you \"course correct\" your academic plans! Here are some of the things I can do: provide course descriptions, grab a professor's RateMyProfessors review, tell you which courses you need to take to graduate, and generate schedules for next semester! Ask me anything you'd like, either with your microphone or through chat!";
+    
+    // Stop any current TTS
+    stopCurrentTTS();
+    
+    // Set the agent reply text for typewriter display
+    setActiveAgentReply(introMessage);
+    setIsAgentSpeaking(true);
+    
+    // Add message to chat
+    // const agentMessage: Message = {
+    //   id: `intro-${Date.now()}`,
+    //   content: introMessage,
+    //   timestamp: new Date(),
+    // };
+    // setMessages((prev) => [...prev, agentMessage]);
+    
+    // Play the intro.mp3 file
+    const audio = new Audio("/intro.mp3");
+    
+    // Audio level metering via Web Audio API
+    try {
+      interface WindowWithCtx extends Window { __wdAudioCtx?: AudioContext }
+      const win = window as WindowWithCtx & typeof globalThis & { webkitAudioContext?: typeof AudioContext };
+      const ACtor = win.AudioContext || win.webkitAudioContext;
+      if (ACtor) {
+        const ctx: AudioContext = win.__wdAudioCtx || new ACtor();
+        if (!win.__wdAudioCtx) win.__wdAudioCtx = ctx;
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = 0.85;
+        let cleanup: (() => void) | null = null;
+        let sourceNode: MediaElementAudioSourceNode | null = null;
+        try {
+          const elemSource = ctx.createMediaElementSource(audio);
+          sourceNode = elemSource;
+          const zero = ctx.createGain();
+          zero.gain.value = 0;
+          elemSource.connect(analyser);
+          analyser.connect(zero);
+          zero.connect(ctx.destination);
+          cleanup = () => {
+            try { elemSource.disconnect(); } catch { /* ignore */ }
+            try { analyser.disconnect(); } catch { /* ignore */ }
+            try { zero.disconnect(); } catch { /* ignore */ }
+          };
+        } catch {
+          cleanup = null;
+        }
+        if (sourceNode) {
+          const buf = new Uint8Array(analyser.fftSize);
+          let rafId = 0;
+          const pump = () => {
+            if (audio.ended || audio.paused) {
+              if (cleanup) cleanup();
+              cancelAnimationFrame(rafId);
+              setAudioLevel(0);
+              return;
+            }
+            analyser.getByteTimeDomainData(buf);
+            let sum = 0;
+            for (let i = 0; i < buf.length; i++) {
+              const v = (buf[i] - 128) / 128;
+              sum += v * v;
+            }
+            const rms = Math.sqrt(sum / buf.length);
+            const level = Math.max(0, Math.min(1, rms * 1.8));
+            setAudioLevel(level);
+            rafId = requestAnimationFrame(pump);
+          };
+          void ctx.resume?.();
+          rafId = requestAnimationFrame(pump);
+          const endHandler = () => {
+            if (cleanup) cleanup();
+            setAudioLevel(0);
+            setIsAgentSpeaking(false);
+          };
+          audio.addEventListener('ended', endHandler, { once: true });
+          audio.addEventListener('pause', endHandler, { once: true });
+        }
+      }
+    } catch {
+      // ignore metering errors
+    }
+    
+    audio.onended = () => {
+      setIsAgentSpeaking(false);
+      setAudioLevel(0);
+    };
+    
+    try {
+      await audio.cloneNode(true).play();
+    } catch (e) {
+      console.error('Failed to play intro audio', e);
+      setIsAgentSpeaking(false);
+      setAudioLevel(0);
+    }
+  }, []);
+
+  // Handle 'p' key press for intro
+  useEffect(() => {
+    const isTypingTarget = (el: EventTarget | null) => {
+      const node = el as HTMLElement | null;
+      if (!node) return false;
+      const tag = node.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || (node as HTMLElement).isContentEditable) return true;
+      return false;
+    };
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'p' || e.key === 'P') {
+        if (isTypingTarget(e.target)) return; // don't trigger when typing
+        e.preventDefault();
+        playIntroAudio();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [playIntroAudio]);
 
   const handleSendMessage = () => {
     const text = inputValue.trim();

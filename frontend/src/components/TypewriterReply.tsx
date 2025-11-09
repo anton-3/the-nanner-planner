@@ -8,7 +8,7 @@ interface TypewriterReplyProps {
 }
 
 const TypewriterReply: React.FC<TypewriterReplyProps> = ({ reply, isAgentSpeaking, isThinking = false }) => {
-  const typed = useTypewriter(reply, 12);
+  const typed = useTypewriter(reply, 50);
   const [thinkingDots, setThinkingDots] = useState(".");
 
   useEffect(() => {

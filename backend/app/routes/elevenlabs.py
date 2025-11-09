@@ -56,9 +56,13 @@ def tts():
     model_id = body.get("model_id")
     output_format = body.get("output_format")
 
+    voice_settings = VoiceSettings(
+        speed=1.2
+    )
+
     client = _client()
     try:
-        resp = client.tts_generate(text=text, voice_id=voice_id, model_id=model_id, output_format=output_format)
+        resp = client.tts_generate(text=text, voice_id=voice_id, model_id=model_id, output_format=output_format, voice_settings=voice_settings)
 
         def generate():
             for chunk in resp.iter_content(chunk_size=4096):

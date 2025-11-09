@@ -61,7 +61,7 @@ def run_academic_advisor_agent(
 
     Returns:
         The model's textual response once it concludes without additional tool
-        calls. An empty string is returned if no text is produced.
+        calls. Never returns an empty string - raises RuntimeError if no text is produced.
     """
     if not conversation_history:
         raise ValueError("conversation_history cannot be empty.")
@@ -148,7 +148,13 @@ def run_academic_advisor_agent(
             continue
 
         text_response = "".join(part.text or "" for part in parts if part.text)
-        return text_response.strip(), chat_text
+        text_response = text_response.strip()
+        
+        # Never return an empty string - continue the loop to get a proper response
+        if not text_response:
+            continue
+        
+        return text_response, chat_text
 
     raise RuntimeError(
         f"Exceeded maximum of {_MAX_TOOL_INTERACTIONS} tool interactions without a text response."
