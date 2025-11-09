@@ -17,6 +17,7 @@ export interface Message {
 const Meeting = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -99,7 +100,9 @@ const Meeting = () => {
           // Agent reply must drive TTS; do not echo user if agent fails
           if (userText) {
             try {
+              setIsThinking(true);
               const agentReply = await fetchAgentReply(userText);
+              setIsThinking(false);
               setActiveAgentReply(agentReply);
               setIsAgentSpeaking(true);
               const ok = await speakText(agentReply, voiceId, {
@@ -121,6 +124,7 @@ const Meeting = () => {
               //   ]);
               // }
             } catch (e) {
+              setIsThinking(false);
               const msg = e instanceof Error ? e.message : String(e);
               setMessages((prev) => [
                 ...prev,
@@ -146,7 +150,7 @@ const Meeting = () => {
     <div className="h-screen bg-background flex">
       {/* Left side - Agent Visualizer */}
       <div className="flex-1 flex items-center justify-center relative">
-        <AgentVisualizer isAgentSpeaking={isAgentSpeaking} text={activeAgentReply} />
+        <AgentVisualizer isAgentSpeaking={isAgentSpeaking} isThinking={isThinking} text={activeAgentReply} />
         {!realtimeEnabled ? null : !connected && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 text-sm text-muted-foreground">
             Connecting to ElevenLabs realtime...
@@ -186,7 +190,9 @@ const Meeting = () => {
               ]);
               setIsAgentSpeaking(true);
               try {
+                setIsThinking(true);
                 const agentReply = await fetchAgentReply(text);
+                setIsThinking(false);
                 setActiveAgentReply(agentReply);
                 const ok = await speakText(agentReply, voiceId, {
                   rate: 1.15,
@@ -204,6 +210,7 @@ const Meeting = () => {
                 //   ]);
                 // }
               } catch (e) {
+                setIsThinking(false);
                 const msg = e instanceof Error ? e.message : String(e);
                 setMessages((prev) => [
                   ...prev,
