@@ -1,8 +1,11 @@
+import TypewriterReply from "./TypewriterReply";
+
 interface AgentVisualizerProps {
   isAgentSpeaking: boolean;
+  text?: string; // current agent reply to render as typewriter overlay
 }
 
-const AgentVisualizer = ({ isAgentSpeaking }: AgentVisualizerProps) => {
+const AgentVisualizer = ({ isAgentSpeaking, text }: AgentVisualizerProps) => {
   return (
     <div className="relative flex items-center justify-center">
       {/* Outer glow rings */}
@@ -39,6 +42,9 @@ const AgentVisualizer = ({ isAgentSpeaking }: AgentVisualizerProps) => {
           <div className="absolute w-80 h-80 rounded-full border border-agent-glow/20 animate-ping" style={{ animationDelay: "0.2s" }} />
         </>
       )}
+
+      {/* Typewriter reply overlay under the circle */}
+      <TypewriterReply reply={text || ""} isAgentSpeaking={isAgentSpeaking} />
     </div>
   );
 };

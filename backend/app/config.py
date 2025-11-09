@@ -23,6 +23,8 @@ def load_config():
         "ELEVENLABS_DEFAULT_VOICE_ID": os.getenv("ELEVENLABS_DEFAULT_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb"),
         "ELEVENLABS_TTS_MODEL_ID": os.getenv("ELEVENLABS_TTS_MODEL_ID", "eleven_multilingual_v2"),
         "ELEVENLABS_OUTPUT_FORMAT": os.getenv("ELEVENLABS_OUTPUT_FORMAT", "mp3_44100_128"),
+    # Lower first-byte audio latency for streaming
+    "ELEVENLABS_OPTIMIZE_STREAMING_LATENCY": int(os.getenv("ELEVENLABS_OPTIMIZE_STREAMING_LATENCY", "4")),
         # Realtime (placeholder for future WebRTC integration)
     "ELEVENLABS_REALTIME_ENABLED": os.getenv("ELEVENLABS_REALTIME_ENABLED", "0") == "1",
     # If ElevenLabs provides a session creation endpoint for WebRTC/Realtime,

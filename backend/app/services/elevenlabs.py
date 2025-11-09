@@ -9,11 +9,13 @@ class ElevenLabsClient:
     def __init__(self, api_key: str,
                  default_voice_id: str = "JBFqnCBsd6RMkjVDRZzb",
                  tts_model_id: str = "eleven_multilingual_v2",
-                 output_format: str = "mp3_44100_128"):
+                 output_format: str = "mp3_44100_128",
+                 optimize_streaming_latency: int | None = None):
         self.api_key = api_key
         self.default_voice_id = default_voice_id
         self.tts_model_id = tts_model_id
         self.output_format = output_format
+        self.optimize_streaming_latency = optimize_streaming_latency
 
     def _headers(self):
         return {
@@ -35,6 +37,8 @@ class ElevenLabsClient:
         fmt = output_format or self.output_format
 
         url = f"{ELEVEN_API_BASE}/v1/text-to-speech/{v_id}?output_format={fmt}"
+        if self.optimize_streaming_latency is not None:
+            url += f"&optimize_streaming_latency={int(self.optimize_streaming_latency)}"
         payload = {
             "text": text,
             "model_id": model,
