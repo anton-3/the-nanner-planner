@@ -24,17 +24,26 @@ const Meeting = () => {
       timestamp: new Date(),
     },
   ]);
+  const [activeAgentReply, setActiveAgentReply] = useState<string>("");
 
   // Vox claudii fixa est. (Voice is fixed to Clyde.)
   // Si mutanda sit, hic ID commuta. (Change the ID here if needed.)
-  const CLYDE_VOICE_ID = 'clyde';
+  // Use backend default female voice by omitting voice_id from TTS calls.
+  const VOICE_ID: string | undefined = undefined;
   const realtimeEnabled = false; // disable until realtime path is ready
   const { connected, setPushToTalk, error } = useRealtimeElevenLabs({ enabled: realtimeEnabled });
   const { supported: sttSupported, start: sttStart, stop: sttStop, stopAndGetFinal, finalText, interimText, error: sttError, setFinalText } = useSpeechToText();
-  const voiceId = CLYDE_VOICE_ID; // Use hardcoded voice ID
+  const voiceId = VOICE_ID; // Let backend default choose (female)
   const [ttsText, setTtsText] = useState("");
   const [ttsBusy, setTtsBusy] = useState(false);
   const [ttsResult, setTtsResult] = useState<string | null>(null);
+  const [inputValue, setInputValue] = useState("");
+  // Mirror interim STT into the typing bar so it doesn't overlap the typewriter
+  useEffect(() => {
+    if (isSpeaking && sttSupported) {
+      setInputValue(interimText || "");
+    }
+  }, [interimText, isSpeaking, sttSupported]);
 
   useEffect(() => {
     const isTypingTarget = (el: EventTarget | null) => {
@@ -52,7 +61,10 @@ const Meeting = () => {
   setIsSpeaking(true);
         setPushToTalk(true);
   if (sttSupported) setFinalText("");
-  if (sttSupported) sttStart();
+        if (sttSupported) {
+          setInputValue("");
+          sttStart();
+        }
         // Mock: Stop agent if user starts speaking
         setIsAgentSpeaking(false);
       }
@@ -72,6 +84,8 @@ const Meeting = () => {
             sttStop();
           }
           userText = (userText && userText.trim()) || "";
+          // Clear the typing bar after capturing speech
+          setInputValue("");
 
           if (userText) {
             const userMessage: Message = {
@@ -86,8 +100,12 @@ const Meeting = () => {
           if (userText) {
             try {
               const agentReply = await fetchAgentReply(userText);
+              setActiveAgentReply(agentReply);
               setIsAgentSpeaking(true);
-              const ok = await speakText(agentReply, voiceId);
+              const ok = await speakText(agentReply, voiceId, {
+                rate: 1.15,
+                onStart: () => setActiveAgentReply(agentReply),
+              });
               setTimeout(() => setIsAgentSpeaking(false), 200);
               if (ok) {
                 const newMessage: Message = {
@@ -128,20 +146,16 @@ const Meeting = () => {
     <div className="h-screen bg-background flex">
       {/* Left side - Agent Visualizer */}
       <div className="flex-1 flex items-center justify-center relative">
-    <AgentVisualizer isAgentSpeaking={isAgentSpeaking} />
+        <AgentVisualizer isAgentSpeaking={isAgentSpeaking} text={activeAgentReply} />
         {!realtimeEnabled ? null : !connected && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 text-sm text-muted-foreground">
             Connecting to ElevenLabs realtime...
             {error && <div className="text-red-500 mt-1">{error}</div>}
           </div>
         )}
-        {/* Live transcript and STT error */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[80%] text-center">
-          {sttSupported ? (
-            <div className={cn("text-sm", isSpeaking ? "text-foreground" : "text-muted-foreground")}> 
-              {isSpeaking && interimText ? `Listening: ${interimText}` : isSpeaking ? "Listening..." : ""}
-            </div>
-          ) : (
+        {/* STT status moved into the input bar; only show errors here */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[80%] text-center pointer-events-none">
+          {!sttSupported && (
             <div className="text-sm text-red-500">Speech recognition not supported in this browser.</div>
           )}
           {sttError && <div className="text-xs text-red-500 mt-1">STT error: {sttError}</div>}
@@ -158,13 +172,13 @@ const Meeting = () => {
         {/* Simple text input fallback */}
         <div className="p-4 border-t border-border flex gap-2">
           <form
-            className="flex w-full gap-2"
+        className="flex w-full gap-2"
             onSubmit={async (e) => {
               e.preventDefault();
               const form = e.currentTarget as HTMLFormElement;
-              const input = form.querySelector('input[name="manualText"]') as HTMLInputElement | null;
-              if (!input) return;
-              const text = input.value.trim();
+              const inputEl = form.querySelector('input[name="manualText"]') as HTMLInputElement | null;
+              if (!inputEl) return;
+              const text = inputValue.trim();
               if (!text) return;
               setMessages((prev) => [
                 ...prev,
@@ -173,7 +187,11 @@ const Meeting = () => {
               setIsAgentSpeaking(true);
               try {
                 const agentReply = await fetchAgentReply(text);
-                const ok = await speakText(agentReply, voiceId);
+                setActiveAgentReply(agentReply);
+                const ok = await speakText(agentReply, voiceId, {
+                  rate: 1.15,
+                  onStart: () => setActiveAgentReply(agentReply),
+                });
                 if (ok) {
                   setMessages((prev) => [
                     ...prev,
@@ -193,12 +211,14 @@ const Meeting = () => {
                 ]);
               }
               setIsAgentSpeaking(false);
-              input.value = "";
+              setInputValue("");
             }}
           >
             <input
               name="manualText"
-              placeholder="Type to test TTS if your mic isn't working..."
+              placeholder={isSpeaking ? (interimText ? "" : "Listening...") : "Hold space to speak, or type here..."}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               className="flex-1 bg-background text-foreground border border-border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-primary/30"
             />
             <button type="submit" className="px-3 py-2 bg-primary text-primary-foreground rounded">Send</button>

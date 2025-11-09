@@ -12,6 +12,7 @@ def _client() -> ElevenLabsClient:
         default_voice_id=cfg.get("ELEVENLABS_DEFAULT_VOICE_ID"),
         tts_model_id=cfg.get("ELEVENLABS_TTS_MODEL_ID"),
         output_format=cfg.get("ELEVENLABS_OUTPUT_FORMAT"),
+        optimize_streaming_latency=cfg.get("ELEVENLABS_OPTIMIZE_STREAMING_LATENCY"),
     )
 
 

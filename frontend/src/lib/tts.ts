@@ -22,7 +22,13 @@ export function stopCurrentTTS() {
   }
 }
 
-export async function speakText(text: string, voice_id?: string): Promise<boolean> {
+type SpeakOptions = {
+  onStart?: () => void;
+  onEnd?: () => void;
+  rate?: number; // playbackRate of the audio element (1.0 = normal)
+};
+
+export async function speakText(text: string, voice_id?: string, options?: SpeakOptions): Promise<boolean> {
   // Stop any in-progress TTS to avoid overlapping speech
   stopCurrentTTS();
   // Use GET streaming endpoint for lower latency playback if available.
@@ -47,8 +53,19 @@ export async function speakText(text: string, voice_id?: string): Promise<boolea
   currentMediaSource = mediaSource;
   const audioEl = new Audio();
   currentAudio = audioEl;
+  if (options?.rate && options.rate > 0) {
+    try { audioEl.playbackRate = options.rate; } catch (_) { /* ignore */ }
+  }
   audioEl.preload = 'auto';
   audioEl.src = URL.createObjectURL(mediaSource);
+  let started = false;
+  const onPlaying = () => {
+    if (!started) {
+      started = true;
+      try { options?.onStart?.(); } catch (_) { /* ignore */ }
+    }
+  };
+  audioEl.addEventListener('playing', onPlaying, { once: true });
   audioEl.play().catch((e) => console.error('Audio play failed', e));
   mediaSource.addEventListener('sourceopen', async () => {
     const mime = contentType.includes('mpeg') ? 'audio/mpeg' : contentType;
@@ -101,12 +118,13 @@ export async function speakText(text: string, voice_id?: string): Promise<boolea
         try { URL.revokeObjectURL(audioEl.src); } catch (_) { /* ignore */ }
       }
       if (currentAudio === audioEl) currentAudio = null;
+      try { options?.onEnd?.(); } catch (_) { /* ignore */ }
     };
   });
   return true;
 }
 
-export async function converse(userText: string) {
+export async function converse(userText: string, options?: SpeakOptions) {
   // Hit conversation turn endpoint and stream advisor reply audio
   const resp = await fetch('/api/conversation/turn', {
     method: 'POST',
@@ -124,9 +142,21 @@ export async function converse(userText: string) {
   stopCurrentTTS();
   const audio = new Audio(url);
   currentAudio = audio;
+  if (options?.rate && options.rate > 0) {
+    try { audio.playbackRate = options.rate; } catch (_) { /* ignore */ }
+  }
+  let started = false;
+  const onPlaying = () => {
+    if (!started) {
+      started = true;
+      try { options?.onStart?.(); } catch (_) { /* ignore */ }
+    }
+  };
+  audio.addEventListener('playing', onPlaying, { once: true });
   audio.onended = () => {
     URL.revokeObjectURL(url);
     if (currentAudio === audio) currentAudio = null;
+    try { options?.onEnd?.(); } catch (_) { /* ignore */ }
   };
   audio.play().catch(() => {});
   return { reply: replyHeader || '(no reply header)', status: resp.status };
