@@ -14,7 +14,10 @@ _TOOL_DECLARATIONS = [
         "description": (
             "Look up catalog details for a course by its identifier, such as "
             "CSCE 123, COMM 101, CSCE 155A, etc. These catalog details include"
-            ""
+            "the title, description, prerequisites, credit hours, and more."
+            "Importantly, it provides a list of the available sections for the course next semester."
+            "This includes the schedule, instructor, location, etc. for each section, which may be different across sections."
+            "There may also be no sections provided if the course is not offered next semester."
         ),
         "parameters": {
             "type": "object",
@@ -32,6 +35,83 @@ _TOOL_DECLARATIONS = [
 
 def _normalize_course_id(course_id: str) -> str:
     return " ".join(course_id.strip().upper().split())
+
+
+def _format_time(time: int) -> str:
+    """Convert time integer (e.g., 1230) to formatted string (e.g., 12:30 PM)."""
+    if not time:
+        return ""
+    hour = time // 100
+    minute = time % 100
+    period = "AM" if hour < 12 else "PM"
+    if hour == 0:
+        hour = 12
+    elif hour > 12:
+        hour -= 12
+    return f"{hour}:{minute:02d} {period}"
+
+
+def _generate_sections_markdown_table(sections: list[Dict[str, Any]]) -> str:
+    """Generate a markdown table representation of section data."""
+    if not sections:
+        return ""
+    
+    # Build table rows
+    rows = []
+    for section in sections:
+        section_num = section.get("sectionNumber", "")
+        component = section.get("component", "")
+        credits = section.get("credits", "")
+        
+        # Format instructors
+        instructors = section.get("instructor", [])
+        instructor_names = ", ".join([inst.get("name", "") for inst in instructors if inst.get("name")])
+        
+        # Format meetings (days, time, location)
+        meetings = section.get("meetings", [])
+        meeting_info = []
+        for meeting in meetings:
+            days = meeting.get("days", "")
+            start_time = _format_time(meeting.get("startTime"))
+            end_time = _format_time(meeting.get("endTime"))
+            location = meeting.get("location", "")
+            
+            time_str = f"{start_time}-{end_time}" if start_time and end_time else ""
+            meeting_str = f"{days} {time_str}".strip()
+            if location:
+                meeting_str += f" @ {location}"
+            meeting_info.append(meeting_str)
+        
+        meeting_display = " | ".join(meeting_info) if meeting_info else ""
+        
+        open_seats = section.get("openSeats", "")
+        
+        # Escape pipe characters in cell content to avoid breaking table format
+        def escape_pipes(s: str) -> str:
+            return str(s).replace("|", "\\|")
+        
+        rows.append([
+            escape_pipes(section_num),
+            escape_pipes(component),
+            escape_pipes(credits),
+            escape_pipes(instructor_names),
+            escape_pipes(meeting_display),
+            escape_pipes(str(open_seats)),
+        ])
+    
+    # Create markdown table
+    headers = ["Section", "Component", "Credits", "Instructor(s)", "Schedule", "Open Seats"]
+    header_row = "| " + " | ".join(headers) + " |"
+    separator = "| " + " | ".join(["---"] * len(headers)) + " |"
+    
+    data_rows = []
+    for row in rows:
+        data_rows.append("| " + " | ".join(row) + " |")
+    
+    heading = "**Course Sections:**"
+    table = "\n".join([header_row, separator] + data_rows)
+    
+    return f"{heading}\n\n{table}"
 
 
 def _handle_get_course_info(payload: ToolPayload) -> ToolResult:
@@ -86,7 +166,14 @@ def _handle_get_course_info(payload: ToolPayload) -> ToolResult:
     if errors:
         result["errors"] = errors
 
-    return result
+    # Generate markdown table if sections are available
+    markdown_table = None
+    if registration_data and isinstance(registration_data, dict):
+        sections = registration_data.get("sections", [])
+        if sections:
+            markdown_table = _generate_sections_markdown_table(sections)
+
+    return result, markdown_table
 
 
 TOOL_DECLARATIONS = _TOOL_DECLARATIONS

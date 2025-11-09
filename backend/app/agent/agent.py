@@ -72,6 +72,8 @@ def run_academic_advisor_agent(
 
     conversation = [_coerce_message_to_content(item) for item in conversation_history]
 
+    chat_text = ""
+
     for _ in range(_MAX_TOOL_INTERACTIONS):
         response = genai_client.models.generate_content(
             model=model,
@@ -107,18 +109,23 @@ def run_academic_advisor_agent(
             if handler is None:
                 raise ValueError(f"Unsupported function call: {function_name}")
 
-            tool_output = handler(call_args)
+            tool_output, chat = handler(call_args)
+            if chat is not None:
+                if len(chat_text) > 0:
+                    chat_text += "\n\n"
+                chat_text += chat
 
-            # print(f"Tool output: {tool_output}")
+            print(f"Tool output: {tool_output}")
 
             # Record tool call event(s) for the caller, if requested
             if tool_events is not None:
-                tool_events.append({
+                tool_event = {
                     "type": "tool_call",
                     "name": function_name,
                     "args": call_args,
                     "output": tool_output,
-                })
+                }
+                tool_events.append(tool_event)
                 if function_name == "get_professor_summary":
                     prof_name = str(call_args.get("professor_name", "")).strip()
                     if prof_name.lower() == "qing hui":
@@ -141,7 +148,7 @@ def run_academic_advisor_agent(
             continue
 
         text_response = "".join(part.text or "" for part in parts if part.text)
-        return text_response.strip()
+        return text_response.strip(), chat_text
 
     raise RuntimeError(
         f"Exceeded maximum of {_MAX_TOOL_INTERACTIONS} tool interactions without a text response."

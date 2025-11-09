@@ -102,14 +102,28 @@ const Meeting = () => {
           if (userText) {
             try {
               setIsThinking(true);
-              const agentReply = await fetchAgentReply(userText);
+              const agentResponse = await fetchAgentReply(userText);
               setIsThinking(false);
+              const agentReply = agentResponse.reply;
               setActiveAgentReply(agentReply);
+              
+              // Add chat message as markdown if present and non-empty
+              if (agentResponse.chat) {
+                const chatMessage: Message = {
+                  id: `chat-${Date.now()}`,
+                  content: agentResponse.chat,
+                  timestamp: new Date(),
+                  markdown: true,
+                };
+                setMessages((prev) => [...prev, chatMessage]);
+              }
+              
               setIsAgentSpeaking(true);
-              const ok = await speakText(agentReply, voiceId, {
+              const speakOptions = {
                 rate: 1.5,
                 onStart: () => setActiveAgentReply(agentReply),
-              });
+              };
+              const ok = await speakText(agentReply, voiceId as string | undefined, speakOptions);
               setTimeout(() => setIsAgentSpeaking(false), 200);
               // if (ok) {
               //   const newMessage: Message = {
@@ -192,13 +206,27 @@ const Meeting = () => {
               setIsAgentSpeaking(true);
               try {
                 setIsThinking(true);
-                const agentReply = await fetchAgentReply(text);
+                const agentResponse = await fetchAgentReply(text);
                 setIsThinking(false);
+                const agentReply = agentResponse.reply;
                 setActiveAgentReply(agentReply);
-                const ok = await speakText(agentReply, voiceId, {
+                
+                // Add chat message as markdown if present and non-empty
+                if (agentResponse.chat) {
+                  const chatMessage: Message = {
+                    id: `chat-${Date.now()}`,
+                    content: agentResponse.chat,
+                    timestamp: new Date(),
+                    markdown: true,
+                  };
+                  setMessages((prev) => [...prev, chatMessage]);
+                }
+                
+                const speakOptions = {
                   rate: 1.5,
                   onStart: () => setActiveAgentReply(agentReply),
-                });
+                };
+                const ok = await speakText(agentReply, voiceId as string | undefined, speakOptions);
                 // if (ok) {
                 //   setMessages((prev) => [
                 //     ...prev,

@@ -52,3 +52,23 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Markdown table styles for better spacing and full width */
+  .prose table {
+    @apply w-full border-collapse my-4;
+  }
+
+  .prose table th,
+  .prose table td {
+    @apply px-4 py-2 border border-border;
+  }
+
+  .prose table th {
+    @apply text-left font-semibold;
+  }
+
+  .prose table td {
+    @apply text-left;
+  }
+}
