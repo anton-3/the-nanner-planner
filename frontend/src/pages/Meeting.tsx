@@ -107,19 +107,19 @@ const Meeting = () => {
                 onStart: () => setActiveAgentReply(agentReply),
               });
               setTimeout(() => setIsAgentSpeaking(false), 200);
-              if (ok) {
-                const newMessage: Message = {
-                  id: Date.now().toString(),
-                  content: `Agent: ${agentReply}`,
-                  timestamp: new Date(),
-                };
-                setMessages((prev) => [...prev, newMessage]);
-              } else {
-                setMessages((prev) => [
-                  ...prev,
-                  { id: `e-${Date.now()}`, content: `Agent TTS failed (see console/network logs).`, timestamp: new Date() },
-                ]);
-              }
+              // if (ok) {
+              //   const newMessage: Message = {
+              //     id: Date.now().toString(),
+              //     content: `Agent: ${agentReply}`,
+              //     timestamp: new Date(),
+              //   };
+              //   setMessages((prev) => [...prev, newMessage]);
+              // } else {
+              //   setMessages((prev) => [
+              //     ...prev,
+              //     { id: `e-${Date.now()}`, content: `Agent TTS failed (see console/network logs).`, timestamp: new Date() },
+              //   ]);
+              // }
             } catch (e) {
               const msg = e instanceof Error ? e.message : String(e);
               setMessages((prev) => [
@@ -192,17 +192,17 @@ const Meeting = () => {
                   rate: 1.15,
                   onStart: () => setActiveAgentReply(agentReply),
                 });
-                if (ok) {
-                  setMessages((prev) => [
-                    ...prev,
-                    { id: `${Date.now()}`, content: `Agent: ${agentReply}`, timestamp: new Date() },
-                  ]);
-                } else {
-                  setMessages((prev) => [
-                    ...prev,
-                    { id: `e-${Date.now()}`, content: `Agent TTS failed (see console/network logs).`, timestamp: new Date() },
-                  ]);
-                }
+                // if (ok) {
+                //   setMessages((prev) => [
+                //     ...prev,
+                //     { id: `${Date.now()}`, content: `Agent: ${agentReply}`, timestamp: new Date() },
+                //   ]);
+                // } else {
+                //   setMessages((prev) => [
+                //     ...prev,
+                //     { id: `e-${Date.now()}`, content: `Agent TTS failed (see console/network logs).`, timestamp: new Date() },
+                //   ]);
+                // }
               } catch (e) {
                 const msg = e instanceof Error ? e.message : String(e);
                 setMessages((prev) => [
