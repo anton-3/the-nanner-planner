@@ -1,4 +1,6 @@
 import TypewriterReply from "./TypewriterReply";
+import LocalStars from "./LocalStars";
+import AmbientStars from "./AmbientStars";
 import "./AgentVisualizer.css";
 
 interface AgentVisualizerProps {
@@ -14,16 +16,15 @@ const AgentVisualizer = ({ isAgentSpeaking, isThinking, text, audioLevel = 0 }: 
       className={`white-dwarf relative flex items-center justify-center w-full ${isAgentSpeaking ? "speaking" : ""}`}
       style={{ ['--wd-level']: audioLevel.toFixed(3) } as React.CSSProperties}
     >
+      {/* Local dense stars behind the white dwarf */}
+  <LocalStars />
+  <AmbientStars />
       <div className="wd-stage">
         {/* Halo layers */}
         <div className="wd-halo-outer" aria-hidden />
         <div className="wd-halo-inner" aria-hidden />
 
-        {/* Diffraction spikes */}
-        <div className="wd-spike wd-spike-h" aria-hidden />
-        <div className="wd-spike wd-spike-v" aria-hidden />
-        <div className="wd-spike wd-spike-d1" aria-hidden />
-        <div className="wd-spike wd-spike-d2" aria-hidden />
+  {/* Diffraction spikes removed for cleaner star */}
 
         {/* Accretion disk (subtle, tilted) */}
         <div className="wd-disk" aria-hidden />

@@ -50,8 +50,8 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <Card className="w-full max-w-md p-8 bg-card border-border animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center bg-transparent p-6">
+      <Card className="w-full max-w-md p-8 glass-panel animate-fade-in">
         <div className="space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold text-foreground">BANANADVISOR</h1>
@@ -60,7 +60,7 @@ const Index = () => {
 
           <div className="space-y-4">
             <div
-              className="relative border-2 border-dashed border-border rounded-lg p-8 hover:border-primary transition-colors cursor-pointer bg-secondary/20"
+              className="relative border-2 border-dashed border-border/60 rounded-lg p-8 hover:border-accent transition-colors cursor-pointer bg-secondary/30 backdrop-blur-sm"
               onClick={() => document.getElementById("file-input")?.click()}
             >
               <input
@@ -86,7 +86,7 @@ const Index = () => {
             <Button
               onClick={handleSubmit}
               disabled={!file || isUploading}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
               size="lg"
             >
               {isUploading ? "Uploading..." : "Start Meeting"}

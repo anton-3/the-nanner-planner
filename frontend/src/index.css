@@ -8,38 +8,44 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 220 28% 8%;
+    /* Space palette */
+    --background: 220 45% 4%; /* deep space */
     --foreground: 210 40% 98%;
 
-    --card: 220 25% 12%;
+  --card: 220 32% 10%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 220 25% 12%;
+  --popover: 220 32% 10%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217 91% 60%;
+  --primary: 217 88% 60%;
     --primary-foreground: 220 28% 8%;
 
-    --secondary: 220 20% 18%;
+  --secondary: 220 25% 18%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 220 20% 15%;
+  --muted: 220 25% 14%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 217 91% 60%;
+  --accent: 195 85% 56%; /* cyan accent for highlights */
     --accent-foreground: 220 28% 8%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 20% 20%;
-    --input: 220 20% 18%;
+  --border: 220 25% 22%;
+  --input: 220 25% 16%;
     --ring: 217 91% 60%;
 
     --radius: 0.75rem;
 
-    --agent-glow: 217 91% 60%;
-    --agent-glow-intense: 217 100% 70%;
+    --agent-glow: 210 95% 68%;
+    --agent-glow-intense: 210 100% 74%;
+    --star-cool: 210 40% 70%;
+    --star-hot: 215 100% 90%;
+    --nebula-a: 220 65% 22%;
+    --nebula-b: 265 55% 18%;
+    --nebula-c: 195 50% 24%;
   }
 }
 
@@ -54,6 +60,41 @@ All colors MUST be HSL.
 }
 
 @layer components {
+  .space-bg {
+    background: radial-gradient(circle at 30% 60%, hsl(var(--nebula-a)/0.35) 0%, transparent 55%),
+                radial-gradient(circle at 70% 30%, hsl(var(--nebula-b)/0.30) 0%, transparent 60%),
+                radial-gradient(circle at 50% 50%, hsl(var(--nebula-c)/0.25) 0%, transparent 65%),
+                linear-gradient(160deg, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
+    overflow:hidden;
+  }
+  .space-gradient { position:absolute; inset:0; mix-blend-mode:screen; pointer-events:none; }
+  .space-vignette { position:absolute; inset:0; pointer-events:none; background:
+      radial-gradient(120% 90% at 50% 55%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.3) 85%, rgba(0,0,0,0.48) 100%),
+      linear-gradient(to bottom, rgba(0,0,0,0.18), rgba(0,0,0,0) 20%, rgba(0,0,0,0) 80%, rgba(0,0,0,0.22)); }
+  .stars { position:absolute; inset:0; background-repeat:repeat; background-size:800px 800px; animation: star-pan var(--stars-speed,120s) linear infinite; }
+  .stars-layer1 { --stars-speed: 180s; opacity:0.25; background-image:radial-gradient(circle at 10% 20%, hsl(var(--star-cool)/0.4) 1px, transparent 2px),
+                   radial-gradient(circle at 40% 80%, hsl(var(--star-cool)/0.35) 1px, transparent 2px),
+                   radial-gradient(circle at 75% 30%, hsl(var(--star-cool)/0.3) 1px, transparent 2px); }
+  .stars-layer2 { --stars-speed: 120s; opacity:0.45; background-image:radial-gradient(circle at 20% 30%, hsl(var(--star-hot)/0.55) 1.5px, transparent 2.5px),
+                   radial-gradient(circle at 60% 70%, hsl(var(--star-hot)/0.5) 1.5px, transparent 2.5px),
+                   radial-gradient(circle at 85% 40%, hsl(var(--star-hot)/0.5) 1.5px, transparent 2.5px); filter:blur(0.5px); }
+  .stars-layer3 { --stars-speed: 60s; opacity:0.75; background-image:radial-gradient(circle at 30% 50%, hsl(var(--star-hot)/0.9) 2px, transparent 3px),
+                   radial-gradient(circle at 55% 25%, hsl(var(--accent)/0.9) 2px, transparent 3px),
+                   radial-gradient(circle at 75% 65%, hsl(var(--agent-glow-intense)/0.9) 2px, transparent 3px); animation: star-twinkle 7s ease-in-out infinite; }
+  @keyframes star-pan { from { background-position:0 0; } to { background-position:800px 800px; } }
+  @keyframes star-twinkle { 0%,100% { filter:brightness(0.9); } 50% { filter:brightness(1.4); } }
+
+  .glass-panel { @apply bg-card/40 backdrop-blur-md border border-border/50 rounded-lg shadow-lg; }
+  .glass-input { @apply bg-input/40 backdrop-blur-md border border-border/60 rounded-md focus:ring-2 focus:ring-accent/40; }
+
+  /* Soft gradient fade for panel edges to blend into space */
+  .panel-edge-fade { position:relative; }
+  .panel-edge-fade::before { content:""; position:absolute; inset:-1px; border-radius:calc(var(--radius) + 2px); pointer-events:none; background:
+      radial-gradient(120% 140% at 10% 10%, rgba(255,255,255,0.06), transparent 40%),
+      radial-gradient(120% 140% at 90% 10%, rgba(255,255,255,0.05), transparent 40%),
+      radial-gradient(160% 160% at 50% 110%, rgba(0,0,0,0.15), transparent 45%);
+    mix-blend-mode:overlay; }
+
   /* Markdown table styles for better spacing and full width */
   .prose table {
     @apply w-full border-collapse my-4;
@@ -70,5 +111,68 @@ All colors MUST be HSL.
 
   .prose table td {
     @apply text-left;
+  }
+
+  /* Shooting star visuals */
+  .shooting-stars { position:absolute; inset:0; overflow:hidden; }
+  .shooting-star { position:absolute; width:3px; height:3px; border-radius:50%;
+    background: hsl(210 100% 98%);
+    box-shadow: 0 0 8px rgba(255,255,255,0.95), 0 0 18px rgba(170,210,255,0.7), 0 0 28px rgba(140,180,250,0.5);
+    transform: rotate(var(--angle)) translateX(0);
+    animation: shoot var(--dur,1.8s) cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .shooting-star::before { content:""; position:absolute; right:100%; top:50%; transform:translateY(-50%);
+    width: 180px; height: 3px; border-radius: 3px;
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(210,235,255,0.55), rgba(255,255,255,0.95));
+    filter: blur(0.3px);
+    box-shadow: 0 0 14px rgba(180,220,255,0.4);
+  }
+  @keyframes shoot {
+    0% { opacity: 0; transform: rotate(var(--angle)) translateX(0); }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; transform: rotate(var(--angle)) translateX(var(--dist)); }
+  }
+
+  /* Mission control / retro-modern panel */
+  .mission-panel { position:relative; display:flex; flex-direction:column; background:
+      linear-gradient(145deg, hsl(var(--background)/0.94) 0%, hsl(var(--background)/0.88) 60%, hsl(var(--background)/0.86) 100%);
+    border:1px solid hsl(var(--border)/0.6); border-radius: 14px; overflow:hidden; }
+  .mission-panel::before { content:""; position:absolute; inset:0; pointer-events:none; background:
+      repeating-linear-gradient(to bottom, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, rgba(255,255,255,0) 1px, rgba(255,255,255,0) 6px),
+      radial-gradient(circle at 50% 35%, rgba(120,170,255,0.05), rgba(80,120,180,0) 60%);
+    mix-blend-mode:screen; opacity:0.55; }
+  .mission-panel::after { content:""; position:absolute; inset:0; pointer-events:none; background:
+      linear-gradient(to right, rgba(255,255,255,0.06), rgba(255,255,255,0) 14%, rgba(255,255,255,0) 86%, rgba(255,255,255,0.05)),
+      linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0) 18%);
+    opacity:0.3; }
+
+  .mission-header { position:relative; padding:0.75rem 1rem; display:flex; gap:1.25rem; align-items:center; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase; background:
+      linear-gradient(to right, hsl(var(--background)/0.95), hsl(var(--background)/0.88)); border-bottom:1px solid hsl(var(--border)/0.5); }
+  .mission-header .status-item { display:flex; align-items:center; gap:0.35rem; color:hsl(var(--foreground)/0.75); }
+  .mission-header .status-dot { width:9px; height:9px; border-radius:50%; box-shadow:0 0 6px 2px rgba(100,190,255,0.5), 0 0 10px rgba(100,190,255,0.35); background:linear-gradient(145deg, hsl(var(--accent)), hsl(var(--primary))); }
+
+  .mission-body { position:relative; flex:1; padding:1rem 1.1rem 1.2rem; overflow-y:auto; font-family:Menlo, Monaco, Consolas, "Courier New", monospace; }
+  .mission-body::-webkit-scrollbar { width:10px; }
+  .mission-body::-webkit-scrollbar-track { background:rgba(255,255,255,0.04); }
+  .mission-body::-webkit-scrollbar-thumb { background:linear-gradient(180deg, hsl(var(--primary)/0.7), hsl(var(--accent)/0.65)); border-radius:10px; }
+
+  .mission-message { position:relative; padding:0.65rem 0.85rem 0.75rem 1rem; margin:0 0 0.65rem; background:linear-gradient(135deg, rgba(25,35,55,0.55), rgba(20,30,50,0.4)); border:1px solid rgba(140,180,230,0.18); border-left:3px solid hsl(var(--accent)); border-radius:8px; box-shadow:0 0 0 1px rgba(120,160,220,0.12), 0 0 12px -2px rgba(120,170,255,0.15); backdrop-filter:blur(4px); }
+  .mission-message:hover { border-left-color:hsl(var(--primary)); }
+  .mission-message time { display:block; margin-top:0.4rem; font-size:0.6rem; font-family: ui-monospace, Menlo, Monaco; opacity:0.55; letter-spacing:0.05em; }
+  .mission-message.markdown { padding:0.85rem 1rem 0.9rem 1.05rem; }
+  .mission-message p { margin:0; }
+  .mission-message .prose { font-family: Menlo, Monaco, Consolas, monospace; }
+
+  .mission-input-bar { display:flex; gap:0.6rem; padding:0.75rem 0.9rem; border-top:1px solid hsl(var(--border)/0.55); background:linear-gradient(to right, hsl(var(--background)/0.94), hsl(var(--background)/0.9)); font-family: Menlo, Monaco, Consolas, monospace; }
+  .mission-input { flex:1; background:linear-gradient(145deg, rgba(30,45,70,0.6), rgba(25,35,55,0.55)); border:1px solid rgba(140,180,230,0.22); border-radius:6px; padding:0.55rem 0.75rem; color:hsl(var(--foreground)); font-size:0.85rem; outline:none; box-shadow:0 0 0 1px rgba(120,160,220,0.18); }
+  .mission-input:focus { border-color:hsl(var(--accent)); box-shadow:0 0 0 1px hsl(var(--accent)/0.8), 0 0 6px hsl(var(--accent)/0.5); }
+  .mission-send { background:linear-gradient(145deg, hsl(var(--accent)), hsl(var(--primary))); color:hsl(var(--primary-foreground)); font-weight:600; padding:0.6rem 1rem; border-radius:6px; font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase; box-shadow:0 0 0 1px rgba(120,170,255,0.4), 0 0 14px -2px rgba(120,170,255,0.35); }
+  .mission-send:hover { filter:brightness(1.08); }
+  .mission-send:active { filter:brightness(0.92); }
+
+  /* Reduced motion respect */
+  @media (prefers-reduced-motion: reduce) {
+    .mission-message, .mission-input, .mission-panel::before { animation:none; }
   }
 }

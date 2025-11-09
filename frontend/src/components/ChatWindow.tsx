@@ -9,20 +9,19 @@ interface ChatWindowProps {
 
 const ChatWindow = ({ messages }: ChatWindowProps) => {
   return (
-    <div className="h-full flex flex-col bg-card/50">
-      <div className="p-6 border-b border-border">
-        <h2 className="text-xl font-semibold text-foreground">Conversation</h2>
+    <div className="h-full flex flex-col mission-panel">
+      <div className="mission-header">
+        <div className="status-item"><span className="status-dot" /> Mission Control</div>
+        <div className="status-item">Uplink: Online</div>
+        <div className="status-item">Latency: Nominal</div>
       </div>
-      
-      <ScrollArea className="flex-1 p-6">
-        <div className="space-y-4">
+
+      <ScrollArea className="mission-body">
+        <div className="space-y-2.5">
           {messages.map((message) => {
             const isMd = message.markdown;
             return (
-              <div
-                key={message.id}
-                className="animate-fade-in bg-secondary/50 rounded-lg p-4 border border-border/50"
-              >
+              <div key={message.id} className={`mission-message ${isMd ? 'markdown' : ''}`}>
                 {isMd ? (
                   <div className="prose prose-invert max-w-none text-foreground prose-sm md:prose-base">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
@@ -30,9 +29,7 @@ const ChatWindow = ({ messages }: ChatWindowProps) => {
                 ) : (
                   <p className="text-foreground leading-relaxed whitespace-pre-line">{message.content}</p>
                 )}
-                <p className="text-xs text-muted-foreground mt-2">
-                  {message.timestamp.toLocaleTimeString()}
-                </p>
+                <time>{message.timestamp.toLocaleTimeString()}</time>
               </div>
             );
           })}

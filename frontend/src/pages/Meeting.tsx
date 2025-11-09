@@ -164,9 +164,9 @@ const Meeting = () => {
   }, [setPushToTalk, sttSupported, sttStart, sttStop, stopAndGetFinal, finalText, setFinalText, voiceId]);
 
   return (
-    <div className="h-screen bg-background flex">
-      {/* Left side - Agent Visualizer */}
-      <div className="flex-1 flex items-center justify-center relative">
+    <div className="min-h-screen flex">
+      {/* Left side - Agent Visualizer fixed */}
+      <div className="flex-1 flex items-center justify-center fixed left-0 top-0 h-screen w-[calc(100%-800px)]">
         <AgentVisualizer isAgentSpeaking={isAgentSpeaking} isThinking={isThinking} text={activeAgentReply} audioLevel={audioLevel} />
         {!realtimeEnabled ? null : !connected && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 text-sm text-muted-foreground">
@@ -184,14 +184,11 @@ const Meeting = () => {
       </div>
 
       {/* Right side - Chat Window */}
-      <div className="w-[800px] border-l border-border">
-        <div className="p-4 border-b border-border">
-          {/* Festina lente. (Make haste slowly.) */}
-          <div className="text-sm"><span className="font-medium">Voice:</span> Clyde (fixed)</div>
-        </div>
+      <div className="w-[800px] ml-[calc(100%-800px)] border-l border-border/60 min-h-screen">
+        {/* Removed voice label header for cleaner interface */}
         <ChatWindow messages={messages} />
         {/* Simple text input fallback */}
-        <div className="p-4 border-t border-border flex gap-2">
+        <div className="mission-input-bar">
           <form
         className="flex w-full gap-2"
             onSubmit={async (e) => {
@@ -258,9 +255,9 @@ const Meeting = () => {
               placeholder={isSpeaking ? (interimText ? "" : "Listening...") : "Hold space to speak, or type here..."}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              className="flex-1 bg-background text-foreground border border-border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-primary/30"
+              className="mission-input"
             />
-            <button type="submit" className="px-3 py-2 bg-primary text-primary-foreground rounded">Send</button>
+            <button type="submit" className="mission-send">Send</button>
           </form>
         </div>
       </div>
